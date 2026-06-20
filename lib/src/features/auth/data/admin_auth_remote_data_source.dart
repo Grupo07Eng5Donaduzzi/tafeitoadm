@@ -9,33 +9,39 @@ abstract class AdminAuthRemoteDataSource {
   });
 }
 
-class MockAdminAuthRemoteDataSource implements AdminAuthRemoteDataSource {
-  const MockAdminAuthRemoteDataSource(this.apiClient);
+class ApiAdminAuthRemoteDataSource implements AdminAuthRemoteDataSource {
+  const ApiAdminAuthRemoteDataSource(this.apiClient);
 
   final ApiClient apiClient;
 
-  static const loginPath = '/v1/admin/auth/login';
+  static const _loginPath = '/v1/auth/login';
 
   @override
   Future<Result<AdminUser>> login({
     required String email,
     required String password,
   }) async {
-    await Future<void>.delayed(const Duration(milliseconds: 420));
+    final result = await apiClient.post(
+      _loginPath,
+      body: {'email': email, 'password': password},
+    );
 
-    if (!email.contains('@') || password.length < 4) {
-      return const Failure(
-        AppFailure(message: 'E-mail ou senha inválidos para o acesso admin.'),
-      );
-    }
-
-    return Success(
-      AdminUser(
-        id: 'adm_001',
-        name: email.split('@').first.isEmpty ? 'Admin' : 'Admin Camila',
-        email: email,
-        role: 'Operações',
-      ),
+    return result.when(
+      success: (json) {
+        final data = (json['data'] as Map<String, dynamic>?) ?? json;
+        final token = data['accessToken'] as String? ?? '';
+        final userJson = data['user'] as Map<String, dynamic>? ?? {};
+        return Success(
+          AdminUser(
+            id: userJson['id'] as String? ?? '',
+            name: userJson['name'] as String? ?? email.split('@').first,
+            email: email,
+            role: 'Admin',
+            token: token,
+          ),
+        );
+      },
+      failure: (f) => Failure(AppFailure(message: f.message)),
     );
   }
 }

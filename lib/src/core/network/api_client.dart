@@ -5,12 +5,17 @@ import 'package:http/http.dart' as http;
 import '../result/result.dart';
 
 class ApiClient {
-  ApiClient({required String baseUrl, http.Client? client})
-    : baseUri = Uri.parse(baseUrl),
-      _client = client ?? http.Client();
+  ApiClient({
+    required String baseUrl,
+    http.Client? client,
+    String? Function()? getToken,
+  }) : baseUri = Uri.parse(baseUrl),
+       _client = client ?? http.Client(),
+       _getToken = getToken;
 
   final Uri baseUri;
   final http.Client _client;
+  final String? Function()? _getToken;
 
   Future<Result<Map<String, dynamic>>> get(
     String path, {
@@ -49,11 +54,17 @@ class ApiClient {
     );
 
     try {
-      final request = http.Request(method, uri)
-        ..headers.addAll({
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        });
+      final headers = <String, String>{
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+
+      final token = _getToken?.call();
+      if (token != null && token.isNotEmpty) {
+        headers['Authorization'] = 'Bearer $token';
+      }
+
+      final request = http.Request(method, uri)..headers.addAll(headers);
 
       if (body != null) {
         request.body = jsonEncode(body);

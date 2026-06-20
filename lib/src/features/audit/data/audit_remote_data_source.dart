@@ -6,67 +6,43 @@ abstract class AuditRemoteDataSource {
   Future<Result<List<AuditLog>>> fetchAuditLogs();
 }
 
-class MockAuditRemoteDataSource implements AuditRemoteDataSource {
-  const MockAuditRemoteDataSource(this.apiClient);
+class ApiAuditRemoteDataSource implements AuditRemoteDataSource {
+  const ApiAuditRemoteDataSource(this.apiClient);
 
   final ApiClient apiClient;
 
-  static const auditLogsPath = '/v1/admin/audit-logs';
-
   @override
   Future<Result<List<AuditLog>>> fetchAuditLogs() async {
-    await Future<void>.delayed(const Duration(milliseconds: 220));
-    final now = DateTime.now();
+    final result = await apiClient.get('/v1/admin/audit');
+    return result.when(
+      success: (json) {
+        final rawList = _extractList(json);
+        final logs = rawList
+            .map((e) => _fromJson(e as Map<String, dynamic>))
+            .toList();
+        return Success(logs);
+      },
+      failure: (f) => Failure(AppFailure(message: f.message)),
+    );
+  }
 
-    return Success([
-      AuditLog(
-        id: 'AUD-9104',
-        admin: 'Admin Luiza',
-        actionType: 'pagamento',
-        description: 'Admin Luiza liberou pagamento PAY-8672',
-        target: 'PAY-8672',
-        createdAt: now.subtract(const Duration(minutes: 28)),
-      ),
-      AuditLog(
-        id: 'AUD-9103',
-        admin: 'Admin Camila',
-        actionType: 'conta',
-        description: 'Admin Camila suspendeu conta USR-1003',
-        target: 'USR-1003',
-        createdAt: now.subtract(const Duration(hours: 2)),
-      ),
-      AuditLog(
-        id: 'AUD-9102',
-        admin: 'Admin Rafael',
-        actionType: 'chat',
-        description: 'Admin Rafael marcou chat CHT-2044 como revisado',
-        target: 'CHT-2044',
-        createdAt: now.subtract(const Duration(hours: 6)),
-      ),
-      AuditLog(
-        id: 'AUD-9101',
-        admin: 'Admin Camila',
-        actionType: 'pagamento',
-        description: 'Admin Camila abriu disputa no pagamento PAY-8718',
-        target: 'PAY-8718',
-        createdAt: now.subtract(const Duration(days: 1, hours: 1)),
-      ),
-      AuditLog(
-        id: 'AUD-9100',
-        admin: 'Admin Luiza',
-        actionType: 'chat',
-        description: 'Admin Luiza sinalizou conversa CHT-2101',
-        target: 'CHT-2101',
-        createdAt: now.subtract(const Duration(days: 2)),
-      ),
-      AuditLog(
-        id: 'AUD-9099',
-        admin: 'Admin Rafael',
-        actionType: 'conta',
-        description: 'Admin Rafael recuperou conta USR-1006',
-        target: 'USR-1006',
-        createdAt: now.subtract(const Duration(days: 4)),
-      ),
-    ]);
+  AuditLog _fromJson(Map<String, dynamic> json) {
+    final createdAt = json['createdAt'] != null
+        ? DateTime.tryParse(json['createdAt'] as String) ?? DateTime.now()
+        : DateTime.now();
+
+    return AuditLog(
+      id: json['id'] as String? ?? '',
+      admin: json['adminName'] as String? ?? 'Admin',
+      actionType: json['targetType'] as String? ?? json['action'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      target: json['targetId'] as String? ?? '',
+      createdAt: createdAt,
+    );
+  }
+
+  static List<dynamic> _extractList(Map<String, dynamic> json) {
+    if (json['data'] is List) return json['data'] as List<dynamic>;
+    return <dynamic>[];
   }
 }

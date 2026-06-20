@@ -20,10 +20,6 @@ import 'features/chats/data/chats_remote_data_source.dart';
 import 'features/chats/data/chats_repository.dart';
 import 'features/chats/presentation/chats_screen.dart';
 import 'features/chats/presentation/chats_view_model.dart';
-import 'features/dashboard/data/dashboard_remote_data_source.dart';
-import 'features/dashboard/data/dashboard_repository.dart';
-import 'features/dashboard/presentation/dashboard_screen.dart';
-import 'features/dashboard/presentation/dashboard_view_model.dart';
 import 'features/payments/data/payments_remote_data_source.dart';
 import 'features/payments/data/payments_repository.dart';
 import 'features/payments/presentation/payments_screen.dart';
@@ -37,17 +33,23 @@ class TaFeitoAdminApp extends StatefulWidget {
 }
 
 class _TaFeitoAdminAppState extends State<TaFeitoAdminApp> {
-  late final ApiClient _apiClient;
   late final AppSession _session;
+  late final ApiClient _apiClient;
   late final AuthViewModel _authViewModel;
 
   @override
   void initState() {
     super.initState();
-    _apiClient = ApiClient(baseUrl: 'https://api.tafeito.app');
     _session = AppSession();
+    _apiClient = ApiClient(
+      baseUrl: 'https://api.tafeito.app',
+      getToken: () {
+        final t = _session.token;
+        return t.isEmpty ? null : t;
+      },
+    );
     _authViewModel = AuthViewModel(
-      AuthRepository(MockAdminAuthRemoteDataSource(_apiClient)),
+      AuthRepository(ApiAdminAuthRemoteDataSource(_apiClient)),
       _session,
     );
   }
@@ -89,7 +91,6 @@ class AdminHome extends StatefulWidget {
 }
 
 class _AdminHomeState extends State<AdminHome> {
-  late final DashboardViewModel _dashboardViewModel;
   late final AccountsViewModel _accountsViewModel;
   late final ChatsViewModel _chatsViewModel;
   late final PaymentsViewModel _paymentsViewModel;
@@ -98,26 +99,22 @@ class _AdminHomeState extends State<AdminHome> {
   @override
   void initState() {
     super.initState();
-    _dashboardViewModel = DashboardViewModel(
-      DashboardRepository(MockDashboardRemoteDataSource(widget.apiClient)),
-    )..load();
     _accountsViewModel = AccountsViewModel(
-      AccountsRepository(MockAccountsRemoteDataSource(widget.apiClient)),
+      AccountsRepository(ApiAccountsRemoteDataSource(widget.apiClient)),
     )..load();
     _chatsViewModel = ChatsViewModel(
-      ChatsRepository(MockChatsRemoteDataSource(widget.apiClient)),
+      ChatsRepository(ApiChatsRemoteDataSource(widget.apiClient)),
     )..load();
     _paymentsViewModel = PaymentsViewModel(
-      PaymentsRepository(MockPaymentsRemoteDataSource(widget.apiClient)),
+      PaymentsRepository(ApiPaymentsRemoteDataSource(widget.apiClient)),
     )..load();
     _auditViewModel = AuditViewModel(
-      AuditRepository(MockAuditRemoteDataSource(widget.apiClient)),
+      AuditRepository(ApiAuditRemoteDataSource(widget.apiClient)),
     )..load();
   }
 
   @override
   void dispose() {
-    _dashboardViewModel.dispose();
     _accountsViewModel.dispose();
     _chatsViewModel.dispose();
     _paymentsViewModel.dispose();
@@ -130,9 +127,6 @@ class _AdminHomeState extends State<AdminHome> {
     return AdminScaffold(
       session: widget.session,
       child: switch (widget.session.selectedSection) {
-        AdminSection.dashboard => DashboardScreen(
-          viewModel: _dashboardViewModel,
-        ),
         AdminSection.accounts => AccountsScreen(viewModel: _accountsViewModel),
         AdminSection.chats => ChatsScreen(viewModel: _chatsViewModel),
         AdminSection.payments => PaymentsScreen(viewModel: _paymentsViewModel),

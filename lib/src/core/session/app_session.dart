@@ -6,20 +6,21 @@ class AdminUser {
     required this.name,
     required this.email,
     required this.role,
+    this.token = '',
   });
 
   final String id;
   final String name;
   final String email;
   final String role;
+  final String token;
 }
 
-enum AdminSection { dashboard, accounts, chats, payments, audit }
+enum AdminSection { accounts, chats, payments, audit }
 
 extension AdminSectionDetails on AdminSection {
   String get title {
     return switch (this) {
-      AdminSection.dashboard => 'Dashboard',
       AdminSection.accounts => 'Contas',
       AdminSection.chats => 'Chats',
       AdminSection.payments => 'Pagamentos',
@@ -29,7 +30,6 @@ extension AdminSectionDetails on AdminSection {
 
   IconData get icon {
     return switch (this) {
-      AdminSection.dashboard => Icons.dashboard_outlined,
       AdminSection.accounts => Icons.people_alt_outlined,
       AdminSection.chats => Icons.forum_outlined,
       AdminSection.payments => Icons.payments_outlined,
@@ -40,21 +40,22 @@ extension AdminSectionDetails on AdminSection {
 
 class AppSession extends ChangeNotifier {
   AdminUser? _currentUser;
-  AdminSection _selectedSection = AdminSection.dashboard;
+  AdminSection _selectedSection = AdminSection.accounts;
 
   AdminUser? get currentUser => _currentUser;
   AdminSection get selectedSection => _selectedSection;
   bool get isAuthenticated => _currentUser != null;
+  String get token => _currentUser?.token ?? '';
 
   void signIn(AdminUser user) {
     _currentUser = user;
-    _selectedSection = AdminSection.dashboard;
+    _selectedSection = AdminSection.accounts;
     notifyListeners();
   }
 
   void signOut() {
     _currentUser = null;
-    _selectedSection = AdminSection.dashboard;
+    _selectedSection = AdminSection.accounts;
     notifyListeners();
   }
 
