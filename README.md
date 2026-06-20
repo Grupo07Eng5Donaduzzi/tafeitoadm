@@ -187,8 +187,4 @@ Os data sources que fazem essas chamadas ficam em:
 lib/src/features/*/data/*_remote_data_source.dart
 ```
 
-## Observações
 
-- As credenciais de acesso dependem de um usuário administrador cadastrado na API.
-- Algumas ações de tela são somente leitura quando não existe endpoint correspondente no backend.
-- O módulo de dashboard existe na estrutura do projeto, mas a navegação atual exibe contas, chats, pagamentos e auditoria.
