@@ -159,9 +159,3 @@ POST   /v1/admin/payments/:id/resolve
 GET    /v1/admin/audit-logs
 ```
 
-## Observações
-
-- O projeto não depende de backend para rodar agora.
-- As ações administrativas alteram apenas mocks locais.
-- Use sempre o nome **TáFeito** para o produto.
-- Use **TáFeito Admin** quando estiver falando do painel.
