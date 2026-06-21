@@ -1,34 +1,54 @@
 # TáFeito Admin
 
-Painel administrativo web do **TáFeito** feito em Flutter Web.
+Painel administrativo web do **TáFeito**, desenvolvido em Flutter Web para operação interna da plataforma.
 
-O projeto está com dados mockados por enquanto. A ideia é deixar o front pronto para depois conectar com a API real.
+O app centraliza rotinas de administração como consulta de contas, acompanhamento de conversas, controle de pagamentos e auditoria de eventos. A interface consome a API do TáFeito e organiza as telas por módulo para manter o fluxo de suporte e moderação direto.
 
-## Requisitos
+## Funcionalidades
 
-- Flutter SDK
-- Dart compatível com o projeto
-- Chrome ou outro navegador para rodar o Flutter Web
+- Login administrativo com token de acesso.
+- Listagem e controle de contas de usuários.
+- Consulta de chats e mensagens vinculadas.
+- Acompanhamento de pagamentos, reembolsos e marcação de pagamento.
+- Consulta de logs de auditoria.
+- Layout web responsivo com navegação lateral administrativa.
 
-Verifique o ambiente:
+## Tecnologias
+
+- Flutter Web
+- Dart
+- Material Design
+- `http` para chamadas REST
+- `intl` para formatação
+- `google_fonts` para tipografia
+
+## Como executar
+
+### Requisitos
+
+- Flutter SDK instalado
+- Dart compatível com o SDK do projeto
+- Chrome ou outro navegador compatível com Flutter Web
+
+Confira o ambiente local:
 
 ```bash
 flutter doctor
 ```
 
-## Instalação
+Instale as dependências:
 
 ```bash
 flutter pub get
 ```
 
-## Rodando localmente
+Execute no Chrome:
 
 ```bash
 flutter run -d chrome
 ```
 
-Ou em uma porta específica:
+Ou execute em uma porta específica:
 
 ```bash
 flutter run -d web-server --web-hostname 127.0.0.1 --web-port 5173
@@ -40,44 +60,35 @@ Acesse:
 http://127.0.0.1:5173
 ```
 
-## Login mockado
-
-Use:
-
-```text
-E-mail: admin@tafeito.com
-Senha: admin123
-```
-
-Também funciona com qualquer e-mail válido e senha com pelo menos 4 caracteres.
-
 ## Comandos úteis
 
-Formatar:
+Formatar o código:
 
 ```bash
 dart format .
 ```
 
-Analisar:
+Analisar o projeto:
 
 ```bash
 flutter analyze
 ```
 
-Testar:
+Executar testes:
 
 ```bash
 flutter test
 ```
 
-Build web:
+Gerar build web:
 
 ```bash
 flutter build web
 ```
 
-## Estrutura principal
+## Padrão escolhido
+
+O projeto usa uma organização **feature-first** com separação em camadas inspirada em MVVM e Repository Pattern.
 
 ```text
 lib/
@@ -93,75 +104,87 @@ lib/
       widgets/
     features/
       auth/
-      dashboard/
       accounts/
       chats/
       payments/
       audit/
 ```
 
-Cada feature segue mais ou menos este padrão:
+Cada feature segue a estrutura:
 
 ```text
 data/
-  remote_data_source
-  repository
+  *_remote_data_source.dart
+  *_repository.dart
 domain/
-  models
+  *_models.dart
 presentation/
-  screen
-  view_model
+  *_screen.dart
+  *_view_model.dart
 ```
 
-## Onde plugar o backend
+Principais decisões do padrão:
 
-Hoje os dados vêm dos arquivos `*_remote_data_source.dart`.
+- `presentation`: telas e `ViewModel` com `ChangeNotifier`.
+- `domain`: modelos usados pela regra de apresentação.
+- `data`: repositories e data sources responsáveis pela comunicação externa.
+- `core/network`: `ApiClient` central para requisições HTTP.
+- `core/result`: tipo `Result<T>` para padronizar sucesso e erro.
+- `core/session`: estado da sessão autenticada e seção selecionada.
 
-Para conectar a API real, comece por estes pontos:
+## API utilizada
+
+A aplicação consome uma API REST JSON.
+
+```text
+Base URL: https://api.tafeito.app
+```
+
+O cliente HTTP central fica em:
 
 ```text
 lib/src/core/network/api_client.dart
+```
+
+A URL base é configurada na inicialização do app:
+
+```text
+lib/src/app.dart
+```
+
+### Autenticação
+
+```text
+POST /v1/auth/login
+```
+
+O login espera um retorno com `accessToken` e dados do usuário. Depois da autenticação, o token é enviado nas próximas requisições como:
+
+```text
+Authorization: Bearer <token>
+```
+
+### Endpoints administrativos
+
+```text
+GET   /v1/admin/users
+PATCH /v1/admin/users/:id/deactivate
+PATCH /v1/admin/users/:id/activate
+
+GET   /v1/admin/chats
+GET   /v1/admin/chats/:chatId/messages
+
+GET   /v1/admin/payments
+POST  /v1/admin/payments/:id/refund
+POST  /v1/admin/payments/:id/mark-paid
+
+GET   /v1/admin/audit
+```
+
+Os data sources que fazem essas chamadas ficam em:
+
+```text
 lib/src/features/*/data/*_remote_data_source.dart
 ```
 
-O projeto já tem:
 
-- `ApiClient` central
-- `Result<T>` com sucesso/erro
-- repositories por feature
-- viewmodels com `ChangeNotifier`
-
-## Endpoints esperados
-
-```text
-POST   /v1/admin/auth/login
-GET    /v1/admin/dashboard
-
-GET    /v1/admin/users
-GET    /v1/admin/users/:id
-PATCH  /v1/admin/users/:id
-PATCH  /v1/admin/users/:id/suspend
-PATCH  /v1/admin/users/:id/restore
-DELETE /v1/admin/users/:id
-
-GET    /v1/admin/chats
-GET    /v1/admin/chats/:id/messages
-PATCH  /v1/admin/chats/:id/review
-PATCH  /v1/admin/chats/:id/flag
-
-GET    /v1/admin/payments
-GET    /v1/admin/payments/:id
-POST   /v1/admin/payments/:id/refund
-POST   /v1/admin/payments/:id/release
-POST   /v1/admin/payments/:id/dispute
-POST   /v1/admin/payments/:id/resolve
-
-GET    /v1/admin/audit-logs
-```
-
-## Observações
-
-- O projeto não depende de backend para rodar agora.
-- As ações administrativas alteram apenas mocks locais.
-- Use sempre o nome **TáFeito** para o produto.
-- Use **TáFeito Admin** quando estiver falando do painel.
