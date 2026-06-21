@@ -72,9 +72,17 @@ class ApiClient {
 
       final response = await _client.send(request);
       final responseBody = await response.stream.bytesToString();
-      final decoded = responseBody.isEmpty
-          ? <String, dynamic>{}
-          : jsonDecode(responseBody) as Map<String, dynamic>;
+      final rawDecoded = responseBody.isEmpty ? null : jsonDecode(responseBody);
+      final Map<String, dynamic> decoded;
+      if (rawDecoded == null) {
+        decoded = <String, dynamic>{};
+      } else if (rawDecoded is List) {
+        decoded = {'data': rawDecoded};
+      } else if (rawDecoded is Map<String, dynamic>) {
+        decoded = rawDecoded;
+      } else {
+        decoded = <String, dynamic>{};
+      }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return Success(decoded);

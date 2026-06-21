@@ -42,7 +42,7 @@ class _TaFeitoAdminAppState extends State<TaFeitoAdminApp> {
     super.initState();
     _session = AppSession();
     _apiClient = ApiClient(
-      baseUrl: 'https://api.tafeito.app',
+      baseUrl: 'https://tafeito.rietto.com/main',
       getToken: () {
         final t = _session.token;
         return t.isEmpty ? null : t;

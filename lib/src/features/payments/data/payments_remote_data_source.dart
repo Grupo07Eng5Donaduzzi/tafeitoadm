@@ -124,7 +124,7 @@ class ApiPaymentsRemoteDataSource implements PaymentsRemoteDataSource {
       updatedAt: updatedAt,
       events: const [],
       evidences: const [],
-      chatId: json['linkedChatId'] as String? ?? '',
+      chatId: '',
     );
   }
 

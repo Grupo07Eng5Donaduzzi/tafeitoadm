@@ -71,18 +71,21 @@ class ApiChatsRemoteDataSource implements ChatsRemoteDataSource {
   }
 
   AdminChat _chatFromJson(Map<String, dynamic> json) {
-    final updatedAt = json['updatedAt'] != null
-        ? DateTime.tryParse(json['updatedAt'] as String) ?? DateTime.now()
+    final names = (json['participantNames'] as List?)?.cast<String>() ?? [];
+    final rawDate =
+        (json['lastMessageAt'] ?? json['createdAt']) as String?;
+    final updatedAt = rawDate != null
+        ? DateTime.tryParse(rawDate) ?? DateTime.now()
         : DateTime.now();
 
     return AdminChat(
-      id: json['conversationId'] as String? ?? json['proposalId'] as String? ?? '',
-      customer: json['clientName'] as String? ?? 'N/D',
-      provider: json['providerName'] as String? ?? 'N/D',
+      id: json['conversationId'] as String? ?? '',
+      customer: names.isNotEmpty ? names[0] : 'N/D',
+      provider: names.length > 1 ? names[1] : 'N/D',
       service: 'N/D',
       proposal: 'Proposta',
-      paymentId: json['proposalId'] as String? ?? '',
-      status: ChatStatus.aberto,
+      paymentId: '',
+      status: json['isActive'] == true ? ChatStatus.aberto : ChatStatus.revisado,
       flagged: false,
       reported: false,
       updatedAt: updatedAt,
