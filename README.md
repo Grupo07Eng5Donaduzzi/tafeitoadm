@@ -2,13 +2,12 @@
 
 Painel administrativo web do **TáFeito**, desenvolvido em Flutter Web para operação interna da plataforma.
 
-O app centraliza rotinas de administração como consulta de contas, acompanhamento de conversas, controle de pagamentos e auditoria de eventos. A interface consome a API do TáFeito e organiza as telas por módulo para manter o fluxo de suporte e moderação direto.
+O app centraliza rotinas de administração como consulta de contas, controle de pagamentos e auditoria de eventos. A interface consome a API do TáFeito e organiza as telas por módulo para manter o fluxo de suporte e moderação direto.
 
 ## Funcionalidades
 
 - Login administrativo com token de acesso.
 - Listagem e controle de contas de usuários.
-- Consulta de chats e mensagens vinculadas.
 - Acompanhamento de pagamentos, reembolsos e marcação de pagamento.
 - Consulta de logs de auditoria.
 - Layout web responsivo com navegação lateral administrativa.
@@ -170,9 +169,6 @@ Authorization: Bearer <token>
 GET   /v1/admin/users
 PATCH /v1/admin/users/:id/deactivate
 PATCH /v1/admin/users/:id/activate
-
-GET   /v1/admin/chats
-GET   /v1/admin/chats/:chatId/messages
 
 GET   /v1/admin/payments
 POST  /v1/admin/payments/:id/refund
