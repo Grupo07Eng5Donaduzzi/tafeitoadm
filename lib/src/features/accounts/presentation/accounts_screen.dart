@@ -140,27 +140,6 @@ class _BulkActionsBar extends StatelessWidget {
                 icon: const Icon(Icons.block_outlined),
                 label: const Text('Suspender selecionadas'),
               ),
-              OutlinedButton.icon(
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppColors.danger,
-                  side: BorderSide(
-                    color: hasSelection ? AppColors.danger : AppColors.border,
-                  ),
-                ),
-                onPressed: hasSelection
-                    ? () => _confirmBulk(
-                        context,
-                        title: 'Excluir contas',
-                        message:
-                            'As contas selecionadas serão marcadas como excluídas.',
-                        confirmLabel: 'Excluir',
-                        destructive: true,
-                        action: viewModel.deleteSelected,
-                      )
-                    : null,
-                icon: const Icon(Icons.delete_outline),
-                label: const Text('Excluir selecionadas'),
-              ),
             ],
           ),
         ),
@@ -388,27 +367,10 @@ class _AccountDetailDialog extends StatelessWidget {
                     value: AppFormatters.date(account.registeredAt),
                   ),
                   _DetailLine(
-                    label: 'Último acesso',
-                    value: AppFormatters.dateTime(account.lastAccess),
-                  ),
-                  _DetailLine(
                     label: 'Pix/chave de pagamento',
                     value: account.paymentKey ?? 'Não informado',
                   ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              _MiniSection(
-                title: 'Serviços cadastrados',
-                items: account.services,
-              ),
-              _MiniSection(
-                title: 'Pagamentos relacionados',
-                items: account.relatedPayments,
-              ),
-              _MiniSection(
-                title: 'Conversas relacionadas',
-                items: account.relatedChats,
               ),
             ],
           ),
@@ -419,107 +381,35 @@ class _AccountDetailDialog extends StatelessWidget {
           spacing: 8,
           runSpacing: 8,
           children: [
-            OutlinedButton.icon(
-              onPressed: () => _showEditDialog(context),
-              icon: const Icon(Icons.edit_outlined),
-              label: const Text('Editar'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => _confirm(
-                context,
-                title: 'Suspender conta',
-                message: 'A conta será bloqueada para uso no app.',
-                confirmLabel: 'Suspender',
-                destructive: true,
-                action: (reason) => viewModel.suspendAccount(account, reason),
+            if (account.status != AccountStatus.suspenso)
+              OutlinedButton.icon(
+                onPressed: () => _confirm(
+                  context,
+                  title: 'Suspender conta',
+                  message: 'A conta será bloqueada para uso no app.',
+                  confirmLabel: 'Suspender',
+                  destructive: true,
+                  action: (reason) => viewModel.suspendAccount(account, reason),
+                ),
+                icon: const Icon(Icons.block_outlined),
+                label: const Text('Suspender'),
               ),
-              icon: const Icon(Icons.block_outlined),
-              label: const Text('Suspender'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => _confirm(
-                context,
-                title: 'Recuperar conta',
-                message: 'A conta voltará para o status ativo.',
-                confirmLabel: 'Recuperar',
-                action: (reason) => viewModel.restoreAccount(account, reason),
+            if (account.status == AccountStatus.suspenso)
+              OutlinedButton.icon(
+                onPressed: () => _confirm(
+                  context,
+                  title: 'Reativar conta',
+                  message: 'A conta voltará para o status ativo.',
+                  confirmLabel: 'Reativar',
+                  action: (reason) => viewModel.restoreAccount(account, reason),
+                ),
+                icon: const Icon(Icons.restore_outlined),
+                label: const Text('Reativar conta'),
               ),
-              icon: const Icon(Icons.restore_outlined),
-              label: const Text('Recuperar conta'),
-            ),
-            OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.danger,
-                side: const BorderSide(color: AppColors.danger),
-              ),
-              onPressed: () => _confirm(
-                context,
-                title: 'Excluir conta',
-                message:
-                    'A conta será marcada como excluída no painel administrativo.',
-                confirmLabel: 'Excluir',
-                destructive: true,
-                action: (reason) => viewModel.deleteAccount(account, reason),
-              ),
-              icon: const Icon(Icons.delete_outline),
-              label: const Text('Excluir conta'),
-            ),
           ],
         ),
       ],
     );
-  }
-
-  Future<void> _showEditDialog(BuildContext context) async {
-    final nameController = TextEditingController(text: account.name);
-    final emailController = TextEditingController(text: account.email);
-
-    final saved = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        surfaceTintColor: Colors.transparent,
-        title: const Text('Editar conta'),
-        content: SizedBox(
-          width: 420,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: 'Nome'),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: emailController,
-                decoration: const InputDecoration(labelText: 'E-mail'),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancelar'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Salvar'),
-          ),
-        ],
-      ),
-    );
-
-    if (saved == true) {
-      await viewModel.updateAccount(
-        account,
-        name: nameController.text.trim(),
-        email: emailController.text.trim(),
-      );
-    }
-
-    nameController.dispose();
-    emailController.dispose();
   }
 
   Future<void> _confirm(
@@ -585,49 +475,3 @@ class _DetailLine extends StatelessWidget {
   }
 }
 
-class _MiniSection extends StatelessWidget {
-  const _MiniSection({required this.title, required this.items});
-
-  final String title;
-  final List<String> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          if (items.isEmpty)
-            Text(
-              'Nenhum item vinculado.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
-            )
-          else
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final item in items)
-                  Chip(
-                    label: Text(item),
-                    side: const BorderSide(color: AppColors.border),
-                    backgroundColor: AppColors.background,
-                    visualDensity: VisualDensity.compact,
-                  ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-}

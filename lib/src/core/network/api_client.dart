@@ -48,10 +48,13 @@ class ApiClient {
     Map<String, String>? query,
     Map<String, dynamic>? body,
   }) async {
-    final uri = baseUri.replace(
-      path: path,
-      queryParameters: query?.isEmpty ?? true ? null : query,
-    );
+    final normalizedBase = baseUri.toString().endsWith('/')
+        ? baseUri
+        : Uri.parse('${baseUri.toString()}/');
+    final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    final uri = query?.isNotEmpty == true
+        ? normalizedBase.resolve(normalizedPath).replace(queryParameters: query)
+        : normalizedBase.resolve(normalizedPath);
 
     try {
       final headers = <String, String>{
@@ -72,9 +75,17 @@ class ApiClient {
 
       final response = await _client.send(request);
       final responseBody = await response.stream.bytesToString();
-      final decoded = responseBody.isEmpty
-          ? <String, dynamic>{}
-          : jsonDecode(responseBody) as Map<String, dynamic>;
+      final rawDecoded = responseBody.isEmpty ? null : jsonDecode(responseBody);
+      final Map<String, dynamic> decoded;
+      if (rawDecoded == null) {
+        decoded = <String, dynamic>{};
+      } else if (rawDecoded is List) {
+        decoded = {'data': rawDecoded};
+      } else if (rawDecoded is Map<String, dynamic>) {
+        decoded = rawDecoded;
+      } else {
+        decoded = <String, dynamic>{};
+      }
 
       if (response.statusCode >= 200 && response.statusCode < 300) {
         return Success(decoded);

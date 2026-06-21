@@ -16,10 +16,6 @@ import 'features/auth/data/admin_auth_remote_data_source.dart';
 import 'features/auth/data/auth_repository.dart';
 import 'features/auth/presentation/auth_view_model.dart';
 import 'features/auth/presentation/login_screen.dart';
-import 'features/chats/data/chats_remote_data_source.dart';
-import 'features/chats/data/chats_repository.dart';
-import 'features/chats/presentation/chats_screen.dart';
-import 'features/chats/presentation/chats_view_model.dart';
 import 'features/payments/data/payments_remote_data_source.dart';
 import 'features/payments/data/payments_repository.dart';
 import 'features/payments/presentation/payments_screen.dart';
@@ -42,7 +38,7 @@ class _TaFeitoAdminAppState extends State<TaFeitoAdminApp> {
     super.initState();
     _session = AppSession();
     _apiClient = ApiClient(
-      baseUrl: 'https://api.tafeito.app',
+      baseUrl: 'https://tafeito.rietto.com/main',
       getToken: () {
         final t = _session.token;
         return t.isEmpty ? null : t;
@@ -92,7 +88,6 @@ class AdminHome extends StatefulWidget {
 
 class _AdminHomeState extends State<AdminHome> {
   late final AccountsViewModel _accountsViewModel;
-  late final ChatsViewModel _chatsViewModel;
   late final PaymentsViewModel _paymentsViewModel;
   late final AuditViewModel _auditViewModel;
 
@@ -101,9 +96,6 @@ class _AdminHomeState extends State<AdminHome> {
     super.initState();
     _accountsViewModel = AccountsViewModel(
       AccountsRepository(ApiAccountsRemoteDataSource(widget.apiClient)),
-    )..load();
-    _chatsViewModel = ChatsViewModel(
-      ChatsRepository(ApiChatsRemoteDataSource(widget.apiClient)),
     )..load();
     _paymentsViewModel = PaymentsViewModel(
       PaymentsRepository(ApiPaymentsRemoteDataSource(widget.apiClient)),
@@ -116,7 +108,6 @@ class _AdminHomeState extends State<AdminHome> {
   @override
   void dispose() {
     _accountsViewModel.dispose();
-    _chatsViewModel.dispose();
     _paymentsViewModel.dispose();
     _auditViewModel.dispose();
     super.dispose();
@@ -128,7 +119,6 @@ class _AdminHomeState extends State<AdminHome> {
       session: widget.session,
       child: switch (widget.session.selectedSection) {
         AdminSection.accounts => AccountsScreen(viewModel: _accountsViewModel),
-        AdminSection.chats => ChatsScreen(viewModel: _chatsViewModel),
         AdminSection.payments => PaymentsScreen(viewModel: _paymentsViewModel),
         AdminSection.audit => AuditScreen(viewModel: _auditViewModel),
       },
