@@ -62,8 +62,9 @@ class _PaymentFilters extends StatelessWidget {
                 ),
               ),
               SizedBox(
-                width: 230,
+                width: 260,
                 child: DropdownButtonFormField<PaymentStatus?>(
+                  isExpanded: true,
                   initialValue: viewModel.statusFilter,
                   decoration: const InputDecoration(labelText: 'Status'),
                   items: [
@@ -281,54 +282,47 @@ class _PaymentDetailDialog extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              ElevatedButton.icon(
-                onPressed: () => _confirm(
-                  context,
-                  title: 'Liberar para executor',
-                  message:
-                      'O valor será marcado como liberado para quem executou o serviço.',
-                  confirmLabel: 'Liberar',
-                  action: viewModel.releaseSelected,
+              if (payment.status == PaymentStatus.aguardandoPagamento)
+                ElevatedButton.icon(
+                  onPressed: () => _confirm(
+                    context,
+                    title: 'Confirmar pagamento',
+                    message:
+                        'O pagamento será marcado como recebido e o serviço passará para execução.',
+                    confirmLabel: 'Confirmar',
+                    action: viewModel.releaseSelected,
+                  ),
+                  icon: const Icon(Icons.check_circle_outline),
+                  label: const Text('Confirmar pagamento recebido'),
                 ),
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('Liberar para executor'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirm(
-                  context,
-                  title: 'Devolver para contratante',
-                  message:
-                      'O pagamento será marcado como estornado para quem contratou.',
-                  confirmLabel: 'Devolver',
-                  destructive: true,
-                  action: viewModel.refundSelected,
+              if (payment.status == PaymentStatus.aguardandoPagamento ||
+                  payment.status == PaymentStatus.clienteConfirmou ||
+                  payment.status == PaymentStatus.prestadorConfirmou ||
+                  payment.status == PaymentStatus.servicoEmAndamento)
+                OutlinedButton.icon(
+                  onPressed: () => _confirm(
+                    context,
+                    title: 'Estornar pagamento',
+                    message:
+                        'O pagamento será estornado. Informe a chave PIX para devolução.',
+                    confirmLabel: 'Estornar',
+                    destructive: true,
+                    action: viewModel.refundSelected,
+                  ),
+                  icon: const Icon(Icons.undo_outlined),
+                  label: const Text('Estornar para contratante'),
                 ),
-                icon: const Icon(Icons.undo_outlined),
-                label: const Text('Devolver para contratante'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirm(
-                  context,
-                  title: 'Abrir disputa',
-                  message: 'O pagamento será movido para análise de disputa.',
-                  confirmLabel: 'Abrir disputa',
-                  destructive: true,
-                  action: viewModel.disputeSelected,
+              if (payment.status != PaymentStatus.aguardandoPagamento &&
+                  payment.status != PaymentStatus.clienteConfirmou &&
+                  payment.status != PaymentStatus.prestadorConfirmou &&
+                  payment.status != PaymentStatus.servicoEmAndamento)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(
+                    'Nenhuma ação disponível para este status.',
+                    style: TextStyle(color: Colors.grey[600]),
+                  ),
                 ),
-                icon: const Icon(Icons.gavel_outlined),
-                label: const Text('Abrir disputa'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () => _confirm(
-                  context,
-                  title: 'Marcar como resolvido',
-                  message: 'Registre a observação da resolução administrativa.',
-                  confirmLabel: 'Resolver',
-                  action: viewModel.resolveSelected,
-                ),
-                icon: const Icon(Icons.verified_outlined),
-                label: const Text('Marcar como resolvido'),
-              ),
             ],
           ),
         ),

@@ -14,7 +14,7 @@ class ApiAdminAuthRemoteDataSource implements AdminAuthRemoteDataSource {
 
   final ApiClient apiClient;
 
-  static const _loginPath = '/v1/auth/login';
+  static const _loginPath = '/v1/admin/auth/login';
 
   @override
   Future<Result<AdminUser>> login({
@@ -28,13 +28,12 @@ class ApiAdminAuthRemoteDataSource implements AdminAuthRemoteDataSource {
 
     return result.when(
       success: (json) {
-        final data = (json['data'] as Map<String, dynamic>?) ?? json;
-        final token = data['accessToken'] as String? ?? '';
-        final userJson = data['user'] as Map<String, dynamic>? ?? {};
+        final token = json['accessToken'] as String? ?? '';
+        final adminJson = json['admin'] as Map<String, dynamic>? ?? {};
         return Success(
           AdminUser(
-            id: userJson['id'] as String? ?? '',
-            name: userJson['name'] as String? ?? email.split('@').first,
+            id: adminJson['id'] as String? ?? '',
+            name: adminJson['name'] as String? ?? email.split('@').first,
             email: email,
             role: 'Admin',
             token: token,

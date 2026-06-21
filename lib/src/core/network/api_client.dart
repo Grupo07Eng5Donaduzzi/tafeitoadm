@@ -48,10 +48,13 @@ class ApiClient {
     Map<String, String>? query,
     Map<String, dynamic>? body,
   }) async {
-    final uri = baseUri.replace(
-      path: path,
-      queryParameters: query?.isEmpty ?? true ? null : query,
-    );
+    final normalizedBase = baseUri.toString().endsWith('/')
+        ? baseUri
+        : Uri.parse('${baseUri.toString()}/');
+    final normalizedPath = path.startsWith('/') ? path.substring(1) : path;
+    final uri = query?.isNotEmpty == true
+        ? normalizedBase.resolve(normalizedPath).replace(queryParameters: query)
+        : normalizedBase.resolve(normalizedPath);
 
     try {
       final headers = <String, String>{
